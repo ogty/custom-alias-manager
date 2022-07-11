@@ -2,9 +2,17 @@
 
 Commands to register, delete, and edit custom aliases.
 
+## Setup
+
+```zsh
+$ cd ~/
+$ git clone https://github.com/ogty/custom-alias-manager
+$ source ./custom-alias-manager/setup.sh
+```
+
 ## Usage
 
-```
+```zsh
 $ customa set <alias> <command>
 $ customa unset <alias>
 $ customa list
@@ -14,7 +22,7 @@ $ customa help
 
 ## Example
 
-```
+```zsh
 $ customa set cdd "cd ~/Desktop"
 $ cdd
 

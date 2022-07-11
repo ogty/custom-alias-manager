@@ -1,71 +1,135 @@
 #!/bin/sh
 
+# Name:
+#     customa: custom alias
+#
+# Description:
+#     Commands to register, delete, and edit custom aliases.
+#
+# Usage:
+#     $ customa set <alias> <command>
+#     $ customa unset <alias>
+#     $ customa list
+#     $ customa clear
+#     $ customa help
+#
+# Example:
+#     $ customa set cdd "cd ~/Desktop"
+#     $ customa set gc@ogty "git clone https://github.com/ogty/\$1.git"
+#
+# Note:
+#    To register a custom alias that takes arguments, use "$" as in a normal shell script.
+#    At this time, "$" should be written in escaped form like "\$".
+#
+# Information:
+#     Custom aliases are defined as functions only.
+#
 # TODO:
-#     - [ ] options
-#       - [ ] func
-#       - [ ] help
-#       - [ ] lsit
-#     - [ ] commands
-#       - [ ] set
-#       - [ ] del
+#     - [ ] unset
+#     - [x] list
+#     - [x] clear
+#     - [x] help
+
+customAliasName="$1"
+customAliasCommand="$2"
+
+RED="\033[31m"
+GREEN="\033[32m"
+RESET="\033[0m"
 
 main='
 BEGIN {
     line_counter = 0;
-    function_name = "";
+    alias_name = "";
 }
 
-# For commands with no arguments
-/^alias/ {
-    print($0);
-}
-
-# For commands with arguments
-/^\w{1,}\(\)/,/^\}/ {
+/^\w{1,}\(\)\s\{/,/^\}/ {
     if ($0 == "}") {
         line_counter = 0;
+        print("}\n");
+        next;
     }
 
     if (line_counter == 0) {
-        split($0, first_line, "()");
-        function_name = first_line[1];
-    } else if (line_counter >= 2) {
-        gsub("\t", "", $0);
-        print($0);
+        split($0, first_line, /\(\)/);
+        alias_name = first_line[1];
+        printf("%s() {\n", alias_name);
+    } else if (line_counter >= 1) {
+        if (target_alias_name == alias_name) {
+            printf("\t%s\n", target_alias_command);
+        } else {
+            gsub("\t", "", $0);
+            printf("\t%s\n", $0);
+        }
     }
+
     line_counter += 1;
 }
 '
 
-# START setup
-currentDirectory=$(cd $(dirname $0);pwd)
-echo 'export PATH="$PATH:'$currentDirectory\" >> ~/.zshrc
-echo 'source ~/.custom_alias' >> ~/.zshrc
-touch ~/.custom_alias
-source ~/.zshrc
-sudo chmod 755 $currentDirectory/customa
+case $1 in
+    "set")
+        if [ $# -lt 3 ]; then
+            echo "Error: file command requires a file name"
+            exit 1
+        fi
 
+        customAliasName=$2
+        customAliasCommand=$3
 
-# START set custom alias
-customAliasName="$1"
-customAliasCommand="$2"
+        while [ $(alias | awk -F '=' '{print $1}' | grep -x "^$customAliasName") ]; do
+            clear
+            echo -e "${RED}The alias \"$customAliasName\" already exists.${RESET}"
+            echo "Please enter a new custom alias name"
+            echo -n "${GREEN}>>> ${RESET}"
+            read newCustomAliasName
+            customAliasName="$newCustomAliasName"
+        done
 
-# Asks for input until a unique name is given so as not to be covered by an existing alias.
-while [ $(alias | awk -F '=' '{print $1}' | grep "^$customAliasName") ]; do
-    clear
-    echo "Custom alias already registered."
-    echo "Please enter a new custom alias name."
-    read customAliasName
-done
+        if [[ -z $(cat ~/.custom_alias | grep "^$customAliasName") ]]; then
+            echo "$customAliasName() {\n\t$customAliasCommand\n}" >> ~/.custom_alias
+        else
+            cat ~/.custom_alias \
+            | awk -v target_alias_name="$customAliasName" -v target_alias_command="$customAliasCommand" "$main" \
+            > ~/.custom_alias.tmp
 
-# TODO:
-#     Implement a custom alias so that if it is the same as 
-#     a command name already defined in the custom alias, it will be overwritten
+            mv ~/.custom_alias.tmp ~/.custom_alias
+        fi
 
-if [ "$function" = true ]; then
-    echo "$customAliasName() {\n\t$customAliasCommand\n}" >> ~/.custom_alias
-else
-    echo "alias $customAliasName='$customAliasCommand'" >> ~/.custom_alias
-fi
+        source ~/.custom_alias
+        ;;
+    "unset")
+        if [ $# -lt 2 ]; then
+            echo "Error: file command requires a file name"
+            exit 1
+        fi
+        
+        customAliasName=$2
 
-source ~/.custom_alias
+        # TODO: unset
+        ;;
+    "list")
+        cat ~/.custom_alias
+        ;;
+    "clear")
+        echo "" > ~/.custom_alias
+        ;;
+    "help")
+        echo "Usage: $customAliasName <command>"
+        echo "Commands:"
+        echo "    set <alias> <command>"
+        echo "    unset <alias>"
+        echo "    list"
+        echo "    clear"
+        echo "    help"
+        ;;
+    *)
+        echo "Usage: $customAliasName <command>"
+        echo "Commands:"
+        echo "    set <alias> <command>"
+        echo "    unset <alias>"
+        echo "    list"
+        echo "    clear"
+        echo "    help"
+        ;;
+esac

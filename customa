@@ -15,7 +15,8 @@
 #
 # Example:
 #     $ customa set cdd "cd ~/Desktop"
-#     $ customa set gc@ogty "git clone https://github.com/ogty/\$1.git"
+#     $ customa set gcogty "git clone https://github.com/ogty/\$1.git"
+#     $ customa unset gcogty
 #
 # Note:
 #    To register a custom alias that takes arguments, use "$" as in a normal shell script.
@@ -23,6 +24,9 @@
 #
 # Information:
 #     Custom aliases are defined as functions only.
+#
+# Warning:
+#     Characters that require escaping cannot be used as custom alias names.
 
 RED="\033[31m"
 GREEN="\033[32m"

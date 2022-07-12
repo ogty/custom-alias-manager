@@ -23,12 +23,6 @@
 #
 # Information:
 #     Custom aliases are defined as functions only.
-#
-# TODO:
-#     - [ ] unset
-#     - [x] list
-#     - [x] clear
-#     - [x] help
 
 RED="\033[31m"
 GREEN="\033[32m"

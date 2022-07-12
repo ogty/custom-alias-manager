@@ -64,6 +64,37 @@ BEGIN {
 }
 '
 
+delete='
+BEGIN {
+    line_counter = 0;
+    alias_name = "";
+}
+
+/^\w{1,}\(\)\s\{/,/^\}/ {
+    if ($0 == "}") {
+        line_counter = 0;
+        if (target_alias_name != alias_name) {
+            print("}\n");
+        }
+        next;
+    }
+    if (line_counter == 0) {
+        split($0, first_line, /\(\)/);
+        alias_name = first_line[1];
+
+        if (target_alias_name != alias_name) {
+            printf("%s() {\n", alias_name);
+        }
+    } else if (line_counter >= 1) {
+        if (target_alias_name != alias_name) {
+            gsub("\t", "", $0);
+            printf("\t%s\n", $0);
+        }
+    }
+    line_counter += 1;
+}
+'
+
 case $1 in
     "set")
         if [ $# -lt 3 ]; then
@@ -103,7 +134,11 @@ case $1 in
         
         customAliasName=$2
 
-        # TODO: unset
+        cat ~/.custom_alias \
+        | awk -v target_alias_name="$customAliasName" "$delete" \
+        > ~/.custom_alias.tmp
+
+        mv ~/.custom_alias.tmp ~/.custom_alias
         ;;
     "list")
         cat ~/.custom_alias

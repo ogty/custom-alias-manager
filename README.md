@@ -26,13 +26,16 @@ $ customa help
 $ customa set cdd "cd ~/Desktop"
 $ cdd
 
-$ customa set gc@ogty "git clone https://github.com/ogty/\$1.git"
-$ gc@ogty custom-alias-manager
+$ customa set gcogty "git clone https://github.com/ogty/\$1.git"
+$ gcogty custom-alias-manager
 ```
 
 > **Note**  
 > To register a custom alias that takes arguments, use `$` as in a normal shell script.  
 > At this time, `$` should be written in escaped form like `\$`.  
+
+> **Warning**  
+> Characters that require escaping cannot be used as custom alias names.
 
 ## Tips
 
